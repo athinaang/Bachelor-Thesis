@@ -1,0 +1,25 @@
+# Python environments and interpreter artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Notebook and test caches
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated datasets and checkpoints
+X_*.npy
+y_*.npy
+
+# Generated figures
+scatter_plots.png
+feature_importance.png
+
+# Local editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
