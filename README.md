@@ -1,52 +1,115 @@
-# Heston Model Calibration Thesis Code
+# Calibrating the Heston Model with XGBoost
 
-This project generates Heston implied-volatility surfaces, trains one XGBoost model for each Heston parameter, and compares machine-learning predictions with differential-evolution calibration. The original [thesis_code.ipynb](thesis_code.ipynb) notebook is kept as a research reference; its functions are grouped by purpose across the Python modules.
+Code for the bachelor thesis *Calibrating the Heston Stochastic Volatility Model with XGBoost: A Machine Learning Alternative to Numerical Optimization* (University of Piraeus, Department of Banking and Financial Management).
+
+Five XGBoost models are trained on synthetically generated implied-volatility surfaces to predict the five Heston parameters. Their accuracy and calibration speed are compared with Differential Evolution.
 
 ## Requirements
 
-- Python 3.12 or 3.13
-- Git (only needed to upload the project)
+Use Python 3.12. Package names and supported versions are listed in [`requirements.txt`](requirements.txt).
 
-## Setup
-
-Open a terminal in the project directory and create a virtual environment.
-
-### Windows PowerShell
+In Windows PowerShell, open the project folder and run:
 
 ```powershell
-py -3.13 -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-If Python 3.13 is not installed, use `py -3.12 -m venv .venv` instead. If PowerShell blocks activation, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal, then activate again.
+## How to Run
 
-### macOS or Linux
+Run the full workflow from the project folder:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-## Run
-
-Run the complete workflow, including both calibration benchmarks:
-
-```bash
+```powershell
 python main.py
 ```
 
-On Windows, `python .\main.py` is equivalent. The program loads `X_20000.npy` if that file exists; otherwise it generates 20,000 samples and saves `X_20000.npy` and `y_20000.npy`. The full workflow includes numerical optimization and can take a long time. Delete both saved dataset files before running if you want to regenerate them. Generated datasets and plots are excluded from Git by `.gitignore`. The program saves `scatter_plots.png` and `feature_importance.png` in the project directory.
+`main.py` calls the functions in notebook order. It runs the pricing check, loads or generates the dataset, trains the models, evaluates them, runs both calibration benchmarks, and saves the plots. The robustness benchmark is included in this full run.
 
-## Project files
+The original [`thesis_code.ipynb`](thesis_code.ipynb) is also retained locally. To run the notebook instead, open it in VS Code and choose **Kernel → Restart & Run All**.
 
-- `main.py`: short entry point that runs the workflow in notebook order.
-- `pricing.py`: Heston pricing, Black-Scholes pricing, and implied volatility.
-- `data_generation.py`: parameter sampling and synthetic dataset generation/loading.
-- `analysis.py`: model training, calibration benchmarks, plots, and summary tables.
-- `config.py`: shared fixed values used by the modules.
-- `thesis_code.ipynb`: preserved notebook version of the research workflow.
+## Project Files
+
+| File | Contents |
+| --- | --- |
+| `main.py` | Workflow entry point |
+| `pricing.py` | Heston pricing, Black-Scholes pricing, and implied volatility |
+| `data_generation.py` | Parameter sampling and synthetic dataset generation/loading |
+| `analysis.py` | Data splitting, model training, benchmarks, plots, and results tables |
+| `config.py` | Shared model, grid, and benchmark settings |
+| `requirements.txt` | Python package dependencies and version ranges |
+| `thesis_code.ipynb` | Original notebook workflow |
+| `X_20000.npy` | 19,892 implied-volatility surfaces with 70 values each |
+| `y_20000.npy` | The corresponding five-parameter Heston targets |
+| `X_partial.npy`, `y_partial.npy` | Dataset checkpoints saved every 500 samples during generation |
+
+The `.npy` datasets are not required; the program generates them if they are missing. Generation can take about two hours. The checkpoint files can be deleted after successful generation.
+
+## Workflow Stages
+
+1. **Pricing:** price a Heston option and compare the low-volatility-of-variance case with Black-Scholes.
+2. **Data:** sample Heston parameters and load or generate 70-point implied-volatility surfaces.
+3. **Training:** split the data into training, validation, and test sets and train one XGBoost model per parameter.
+4. **Evaluation:** report MAE, MSE, and R²; save predicted-versus-actual and feature-importance plots.
+5. **Calibration:** compare XGBoost with Differential Evolution on pricing accuracy and runtime, then run the robustness benchmark.
+
+## Approximate Runtimes
+
+Runtimes vary with the computer and its power settings.
+
+| Stage | Approximate time |
+| --- | --- |
+| Load saved data | Seconds |
+| Generate 20,000 samples | About 2 hours |
+| Train five models | A few minutes |
+| Calculate XGBoost surface RMSE for the full test set | About 5 minutes |
+| Five-sample Differential Evolution benchmark | About 2 hours |
+| Robustness check (`maxiter=200`) | 3+ hours |
+
+The full `main.py` run includes both Differential Evolution benchmarks and can take several hours. The notebook's robustness-check cell can be skipped when reproducing only the primary benchmark; `main.py` currently runs it automatically.
+
+## Notes
+
+- Differential Evolution prices 70 options for many candidate parameter sets, so its long runtime is expected.
+- The robustness check uses `maxiter=200` rather than `50` to check whether the optimizer had already converged.
+- Change `DEFAULT_SAMPLE_COUNT` in `config.py` to use a different sample count. The dataset filenames follow that value.
+- Some generated samples are rejected when an implied volatility is undefined or outside the configured range. The reported rejection rate was about 0.54%.
+- XGBoost predictions are clipped to the configured parameter ranges in the full-test-set RMSE calculation before repricing. This matters most for `kappa`, whose predictions can fall below its lower bound.
+
+## Results Summary
+
+Reported results use 13,932 training surfaces and 2,984 held-out surfaces.
+
+| Parameter | MAE | MSE | R² |
+| --- | ---: | ---: | ---: |
+| κ | 0.5521 | 0.610134 | 0.9167 |
+| θ | 0.0013 | 0.000008 | 0.9949 |
+| σ | 0.0290 | 0.001434 | 0.9791 |
+| ρ | 0.0346 | 0.003339 | 0.9444 |
+| v₀ | 0.0008 | 0.000001 | 0.9992 |
+
+| Method | IV RMSE | Time per surface |
+| --- | ---: | ---: |
+| XGBoost | 0.0026 | 9.5 ms |
+| Differential Evolution | < 0.0001 | 1,485.8 s |
+
+Differential Evolution is more accurate in this comparison; XGBoost is substantially faster. Absolute timings are machine-dependent.
+
+## Scope
+
+All data is synthetic. Training and test surfaces are generated by the Heston model, so this experiment measures how well XGBoost inverts the Heston mapping, not how well it calibrates to real markets. Validation on actual S&P 500 option data is left to future work.
+
+## GitHub
+
+The project is connected to `https://github.com/athinaang/Bachelor-Thesis.git` on `main`. To upload changes:
+
+```powershell
+git status
+git add .
+git status
+git commit -m "Describe your changes"
+git push
+```
+
+Review the staged files before committing. The current `.gitignore` excludes the notebook, datasets, thesis documents, virtual environment, and generated plots.
 
