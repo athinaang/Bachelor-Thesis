@@ -1,6 +1,6 @@
 # Heston Model Calibration Thesis Code
 
-This project generates Heston implied-volatility surfaces, trains one XGBoost model for each Heston parameter, and compares machine-learning predictions with differential-evolution calibration. The original [thesis_code.ipynb](thesis_code.ipynb) notebook is kept as a research reference; its workflow is organized into functions in `main.py`, with fixed values in `config.py`.
+This project generates Heston implied-volatility surfaces, trains one XGBoost model for each Heston parameter, and compares machine-learning predictions with differential-evolution calibration. The original [thesis_code.ipynb](thesis_code.ipynb) notebook is kept as a research reference; its functions are grouped by purpose across the Python modules.
 
 ## Requirements
 
@@ -43,7 +43,10 @@ On Windows, `python .\main.py` is equivalent. The program loads `X_20000.npy` if
 
 ## Project files
 
-- `main.py`: all workflow functions and the entry point.
-- `config.py`: shared model, grid, data, and benchmark settings.
+- `main.py`: short entry point that runs the workflow in notebook order.
+- `pricing.py`: Heston pricing, Black-Scholes pricing, and implied volatility.
+- `data_generation.py`: parameter sampling and synthetic dataset generation/loading.
+- `analysis.py`: model training, calibration benchmarks, plots, and summary tables.
+- `config.py`: shared fixed values used by the modules.
 - `thesis_code.ipynb`: preserved notebook version of the research workflow.
 
