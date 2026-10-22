@@ -5,6 +5,8 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_DIR
+
+# Market inputs and the strike/maturity grid used for every volatility surface.
 SPOT_PRICE = 100.0
 RISK_FREE_RATE = 0.03
 DIVIDEND_YIELD = 0.0
@@ -14,6 +16,7 @@ MATURITY_DAYS = (30, 91, 182, 274, 365, 548, 730)
 STRIKES = tuple(SPOT_PRICE * value for value in MONEYNESS)
 MATURITIES = tuple(days / 365 for days in MATURITY_DAYS)
 PARAMETER_NAMES = ("kappa", "theta", "sigma", "rho", "v0")
+# Bounds follow the same parameter order as PARAMETER_NAMES.
 PARAMETER_BOUNDS = (
 	(0.5, 10.0),
 	(0.01, 0.15),

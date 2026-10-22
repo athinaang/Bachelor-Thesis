@@ -56,6 +56,7 @@ def generate_or_load_dataset(samples_scaled):
             iv_surface = []
             success = True
 
+            # Each sample contains 7 maturities x 10 strikes in surface_for order.
             for T in MATURITIES:
                 for K in STRIKES:
                     try:
@@ -92,6 +93,7 @@ def generate_or_load_dataset(samples_scaled):
                     f"Sample {i+1}/{DEFAULT_SAMPLE_COUNT} | {len(all_ivs)} good | "
                     f"{failed} failed | {elapsed:.0f}s"
                 )
+                # Preserve progress in case the long generation run is interrupted.
                 np.save(DATA_DIR / "X_partial.npy", np.array(all_ivs))
                 np.save(DATA_DIR / "y_partial.npy", np.array(all_params))
 

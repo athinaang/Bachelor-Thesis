@@ -39,6 +39,7 @@ from pricing import heston_price, implied_vol, surface_for
 
 def split_dataset(X, y):
     """Create the notebook's train, validation, and test splits."""
+    # The second split reserves about 15% of the full dataset for validation.
     X_train_full, X_test, y_train_full, y_test = train_test_split(
         X, y, test_size=TRAIN_TEST_FRACTION, random_state=RANDOM_STATE
     )
@@ -69,6 +70,7 @@ def train_models(X_train, X_val, X_test, y_train, y_val, y_test):
             early_stopping_rounds=XGBOOST_EARLY_STOPPING_ROUNDS,
             random_state=RANDOM_STATE,
         )
+        # Validation data determines when boosting stops to limit overfitting.
         model.fit(
             X_train,
             y_train[:, i],
@@ -140,6 +142,7 @@ def calibration_error(params, target_ivs, S, r, strikes, maturities):
             except Exception as e:
                 print(e)
                 return 1e6
+    # Differential evolution minimizes this sum across all surface points.
     error = np.sum((np.array(model_ivs) - np.array(target_ivs)) ** 2)
     return error
 

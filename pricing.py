@@ -124,6 +124,7 @@ def surface_for(kappa, theta, sigma, rho, v0):
     option_type = ql.Option.Call
 
     options_list = []
+    # Keep this order aligned with the feature rows saved by data_generation.py.
     for T in MATURITIES:
         for K in STRIKES:
             maturity_date = today + ql.Period(round(T * 365), ql.Days)
